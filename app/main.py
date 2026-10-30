@@ -10,4 +10,6 @@ async def health():
 
 @app.get("/readiness")
 async def readiness_probe():
-    return {"status": "ready"}
+    status = "ready"
+    response = {"status": status}
+    return response
