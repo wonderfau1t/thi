@@ -1,0 +1,15 @@
+.git/
+.github/
+.venv/
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.DS_Store
+tests/
+Dockerfile*
+trivy-report.txt
+sbom*.json
