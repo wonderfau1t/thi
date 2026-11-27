@@ -9,10 +9,11 @@ on:
 permissions:
   contents: read
   packages: write
+  
 
 jobs:
-  ci:
-    name: Quality checks and Docker image
+  quality:
+    name: Lint, Unit tests, Build check
     runs-on: ubuntu-latest
 
     steps:
@@ -36,11 +37,49 @@ jobs:
       - name: Lint
         run: uv run --locked flake8 app tests
 
-      - name: Test with coverage gate
-        run: uv run --locked pytest
+      - name: Unit tests with coverage gate
+        run: >-
+          uv run --locked pytest tests/unit
+          --cov=app --cov-report=term-missing
+          --cov-report=xml --cov-fail-under=80
+          --omit=app/visits.py
 
       - name: Build
         run: uv run --locked python -m compileall -q app
+
+  integration-tests:
+    name: Integration tests (Testcontainers)
+    needs: [quality]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv and dependency cache
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies from lock file
+        run: uv sync --locked
+
+      - name: Run integration tests in parallel
+        run: uv run --locked pytest tests/integration -n auto --no-cov
+  docker-image:
+    name: Docker image build, scan, publish
+    needs: [integration-tests]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
