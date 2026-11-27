@@ -9,7 +9,6 @@ on:
 permissions:
   contents: read
   packages: write
-  
 
 jobs:
   quality:
@@ -38,11 +37,7 @@ jobs:
         run: uv run --locked flake8 app tests
 
       - name: Unit tests with coverage gate
-        run: >-
-          uv run --locked pytest tests/unit
-          --cov=app --cov-report=term-missing
-          --cov-report=xml --cov-fail-under=80
-          --omit=app/visits.py
+        run: uv run --locked pytest tests/unit
 
       - name: Build
         run: uv run --locked python -m compileall -q app
@@ -72,6 +67,7 @@ jobs:
 
       - name: Run integration tests in parallel
         run: uv run --locked pytest tests/integration -n auto --no-cov
+
   docker-image:
     name: Docker image build, scan, publish
     needs: [integration-tests]
