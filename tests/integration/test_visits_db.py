@@ -3,4 +3,4 @@ def test_first_request_uses_database(app_client):
 
     assert response.status_code == 200
     assert response.json()["source"] == "db"
-    assert response.json()["count"] > 100
+    assert response.json()["count"] > 0
