@@ -94,6 +94,7 @@ jobs:
           push: false
           load: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
+          pull: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
