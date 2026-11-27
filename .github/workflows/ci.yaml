@@ -153,3 +153,24 @@ jobs:
       - name: Publish scanned image to GHCR
         if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: docker push "${IMAGE_NAME}:${SHORT_SHA}"
+
+    promote-to-staging:
+    name: Promote image to staging registry
+    needs: [docker-image]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Skopeo
+        run: sudo apt-get update && sudo apt-get install -y skopeo
+
+      - name: Log in to GHCR
+        run: >-
+          echo "${{ secrets.GITHUB_TOKEN }}" |
+          skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Copy image to staging namespace
+        run: >-
+          skopeo copy
+          docker://ghcr.io/wonderfau1t/thi:${GITHUB_SHA::7}
+          docker://ghcr.io/wonderfau1t/thi-staging:${GITHUB_SHA::7}
