@@ -9,4 +9,4 @@ spec:
     spec:
       containers:
         - name: myapp
-          image: ghcr.io/wonderfau1t/thi-staging:OLD_TAG
+          image: ghcr.io/wonderfau1t/thi-staging:aa4072a
