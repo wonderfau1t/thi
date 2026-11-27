@@ -21,6 +21,11 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# Обновление пакетов базового образа: закрывает CVE в системных
+# библиотеках (например linux-pam), пока официальный тег не пересобран
+RUN apt-get update && apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY --from=build /opt/venv /opt/venv
