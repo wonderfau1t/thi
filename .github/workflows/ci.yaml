@@ -154,7 +154,7 @@ jobs:
         if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: docker push "${IMAGE_NAME}:${SHORT_SHA}"
 
-    promote-to-staging:
+  promote-to-staging:
     name: Promote image to staging registry
     needs: [docker-image]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -174,3 +174,30 @@ jobs:
           skopeo copy
           docker://ghcr.io/wonderfau1t/thi:${GITHUB_SHA::7}
           docker://ghcr.io/wonderfau1t/thi-staging:${GITHUB_SHA::7}
+
+  update-manifest:
+    name: Update staging Kubernetes manifest
+    needs: [promote-to-staging]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update image tag and commit
+        run: |
+          TAG=${GITHUB_SHA::7}
+          yq -i ".spec.template.spec.containers[0].image = \"ghcr.io/wonderfau1t/thi-staging:${TAG}\"" k8s-manifests/staging/deployment.yaml
+          git config user.email "ci-bot@example.com"
+          git config user.name "CI Bot"
+          git add k8s-manifests/staging/deployment.yaml
+          git commit -m "Deploy ${TAG} to staging"
+          git push
